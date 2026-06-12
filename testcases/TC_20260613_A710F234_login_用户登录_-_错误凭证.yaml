@@ -1,0 +1,75 @@
+author: qa-team
+category: login
+created_at: '2026-06-13T01:36:54.749668'
+description: 验证使用错误密码时登录失败并提示
+device_requirements: []
+enabled: true
+expected_result: 显示密码错误提示
+extra: {}
+id: TC_20260613_A710F234
+name: 用户登录 - 错误凭证
+prerequisites: []
+priority: 9
+risk_level: high
+steps:
+- description: 点击我的 Tab
+  extra: {}
+  screenshot_on_fail: true
+  selector: ''
+  step_type: click
+  target: 我的Tab
+  timeout: 10
+  value: ''
+- description: 进入登录页
+  extra: {}
+  screenshot_on_fail: true
+  selector: ''
+  step_type: click
+  target: 登录按钮
+  timeout: 10
+  value: ''
+- description: 输入正确用户名
+  extra: {}
+  screenshot_on_fail: true
+  selector: ''
+  step_type: input
+  target: 用户名
+  timeout: 10
+  value: test_user_001
+- description: 输入错误密码
+  extra: {}
+  screenshot_on_fail: true
+  selector: ''
+  step_type: input
+  target: 密码
+  timeout: 10
+  value: wrong_password
+- description: 点击登录
+  extra: {}
+  screenshot_on_fail: true
+  selector: ''
+  step_type: click
+  target: 提交登录
+  timeout: 10
+  value: ''
+- description: ''
+  extra: {}
+  screenshot_on_fail: true
+  selector: ''
+  step_type: wait
+  target: ''
+  timeout: 10
+  value: '1000'
+- description: 验证错误提示出现
+  extra: {}
+  screenshot_on_fail: true
+  selector: ''
+  step_type: assert
+  target: 错误提示
+  timeout: 10
+  value: 密码错误
+tags:
+- login
+- auth
+- negative
+updated_at: '2026-06-13T01:36:54.749668'

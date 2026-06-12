@@ -1,0 +1,163 @@
+{
+  "run_id": "RUN_20260613013916_2466A2",
+  "version": "1.0.0",
+  "start_time": "2026-06-13T01:39:16.649457",
+  "end_time": "2026-06-13T01:39:24.146724",
+  "duration_ms": 7497,
+  "total_cases": 2,
+  "passed": 1,
+  "failed": 1,
+  "skipped": 0,
+  "errors": 0,
+  "pass_rate": 50.0,
+  "retry_count": 1,
+  "only_high_risk": true,
+  "device_count": 2,
+  "devices": [
+    "iPhone-15-Pro",
+    "Pixel-8-Pro"
+  ],
+  "case_results": [
+    {
+      "case_id": "TC_20260613_88A92E68",
+      "case_name": "用户登录 - 正确凭证",
+      "category": "login",
+      "risk_level": "critical",
+      "device_name": "iPhone-15-Pro",
+      "status": "passed",
+      "start_time": "2026-06-13T01:39:17.261975",
+      "end_time": "2026-06-13T01:39:21.460823",
+      "duration_ms": 4198,
+      "retry_count": 0,
+      "step_results": [
+        {
+          "step_index": 0,
+          "step_type": "click",
+          "description": "点击底部我的 Tab",
+          "status": "passed",
+          "start_time": "2026-06-13T01:39:17.463013",
+          "end_time": "2026-06-13T01:39:17.789713",
+          "duration_ms": 326,
+          "error_message": "",
+          "screenshot_path": "",
+          "logs": []
+        },
+        {
+          "step_index": 1,
+          "step_type": "click",
+          "description": "点击登录/注册按钮",
+          "status": "passed",
+          "start_time": "2026-06-13T01:39:17.789713",
+          "end_time": "2026-06-13T01:39:18.118738",
+          "duration_ms": 329,
+          "error_message": "",
+          "screenshot_path": "",
+          "logs": []
+        },
+        {
+          "step_index": 2,
+          "step_type": "input",
+          "description": "输入用户名",
+          "status": "passed",
+          "start_time": "2026-06-13T01:39:18.118738",
+          "end_time": "2026-06-13T01:39:18.601455",
+          "duration_ms": 482,
+          "error_message": "",
+          "screenshot_path": "",
+          "logs": []
+        },
+        {
+          "step_index": 3,
+          "step_type": "input",
+          "description": "输入密码",
+          "status": "passed",
+          "start_time": "2026-06-13T01:39:18.601455",
+          "end_time": "2026-06-13T01:39:19.039300",
+          "duration_ms": 437,
+          "error_message": "",
+          "screenshot_path": "",
+          "logs": []
+        },
+        {
+          "step_index": 4,
+          "step_type": "click",
+          "description": "点击登录按钮提交",
+          "status": "passed",
+          "start_time": "2026-06-13T01:39:19.039300",
+          "end_time": "2026-06-13T01:39:19.339780",
+          "duration_ms": 300,
+          "error_message": "",
+          "screenshot_path": "",
+          "logs": []
+        },
+        {
+          "step_index": 5,
+          "step_type": "wait",
+          "description": "等待登录完成",
+          "status": "passed",
+          "start_time": "2026-06-13T01:39:19.339780",
+          "end_time": "2026-06-13T01:39:21.346002",
+          "duration_ms": 2006,
+          "error_message": "",
+          "screenshot_path": "",
+          "logs": []
+        },
+        {
+          "step_index": 6,
+          "step_type": "assert",
+          "description": "验证用户昵称已显示",
+          "status": "passed",
+          "start_time": "2026-06-13T01:39:21.346002",
+          "end_time": "2026-06-13T01:39:21.460823",
+          "duration_ms": 114,
+          "error_message": "",
+          "screenshot_path": "",
+          "logs": []
+        }
+      ],
+      "error_message": "",
+      "screenshot_path": "",
+      "log_path": "D:\\trae-bz\\TraeProjects\\1152\\logs\\run_20260613_013916.log",
+      "tags": [
+        "smoke",
+        "login",
+        "auth"
+      ]
+    },
+    {
+      "case_id": "TC_20260613_88A92E68",
+      "case_name": "用户登录 - 正确凭证",
+      "category": "login",
+      "risk_level": "critical",
+      "device_name": "Pixel-8-Pro",
+      "status": "failed",
+      "start_time": "2026-06-13T01:39:23.695733",
+      "end_time": "2026-06-13T01:39:24.145196",
+      "duration_ms": 449,
+      "retry_count": 1,
+      "step_results": [
+        {
+          "step_index": 0,
+          "step_type": "click",
+          "description": "点击底部我的 Tab",
+          "status": "failed",
+          "start_time": "2026-06-13T01:39:23.897709",
+          "end_time": "2026-06-13T01:39:24.143181",
+          "duration_ms": 245,
+          "error_message": "点击底部我的 Tab - click 失败: 元素未找到或超时",
+          "screenshot_path": "D:\\trae-bz\\TraeProjects\\1152\\screenshots\\TC_20260613_88A92E68_Pixel-8-Pro_013923_fail.png",
+          "logs": []
+        }
+      ],
+      "error_message": "点击底部我的 Tab - click 失败: 元素未找到或超时",
+      "screenshot_path": "D:\\trae-bz\\TraeProjects\\1152\\screenshots\\TC_20260613_88A92E68_Pixel-8-Pro_013923_fail.png",
+      "log_path": "D:\\trae-bz\\TraeProjects\\1152\\logs\\run_20260613_013916.log",
+      "tags": [
+        "smoke",
+        "login",
+        "auth"
+      ]
+    }
+  ],
+  "summary": {}
+}

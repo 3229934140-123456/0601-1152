@@ -1,0 +1,53 @@
+accounts:
+- description: 普通测试账号
+  password: password123
+  role: normal
+  username: test_user_001
+- description: VIP 测试账号
+  password: password123
+  role: vip
+  username: test_vip_001
+- description: 管理员测试账号
+  password: admin123
+  role: admin
+  username: admin
+cases_dir: testcases
+devices:
+- app_activity: MainActivity
+  app_package: com.example.app
+  app_version: 2.5.0
+  capabilities:
+    automationName: XCUITest
+    noReset: true
+  device_id: 00008110-0012345ABCDEF
+  is_active: true
+  name: iPhone-15-Pro
+  platform: iOS
+  platform_version: '17.0'
+- app_activity: .MainActivity
+  app_package: com.example.app
+  app_version: 2.5.0
+  capabilities:
+    automationName: UiAutomator2
+    noReset: true
+  device_id: emulator-5554
+  is_active: true
+  name: Pixel-8-Pro
+  platform: Android
+  platform_version: '14'
+extra: {}
+logs_dir: logs
+only_high_risk: false
+project_name: SmokeTest-Release
+recordings_dir: recordings
+report_dir: reports
+retry_count: 2
+screenshots_dir: screenshots
+tags:
+- smoke
+- critical
+- order
+- payment
+- message
+- settings
+version: 1.0.0

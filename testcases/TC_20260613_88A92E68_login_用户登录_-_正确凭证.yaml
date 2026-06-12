@@ -1,0 +1,75 @@
+author: qa-team
+category: login
+created_at: '2026-06-13T01:36:54.749668'
+description: 验证使用正确的用户名密码可以成功登录
+device_requirements: []
+enabled: true
+expected_result: 成功登录并显示用户昵称
+extra: {}
+id: TC_20260613_88A92E68
+name: 用户登录 - 正确凭证
+prerequisites: []
+priority: 10
+risk_level: critical
+steps:
+- description: 点击底部我的 Tab
+  extra: {}
+  screenshot_on_fail: true
+  selector: id/tab_profile
+  step_type: click
+  target: 我的Tab
+  timeout: 10
+  value: ''
+- description: 点击登录/注册按钮
+  extra: {}
+  screenshot_on_fail: true
+  selector: id/btn_login
+  step_type: click
+  target: 登录按钮
+  timeout: 10
+  value: ''
+- description: 输入用户名
+  extra: {}
+  screenshot_on_fail: true
+  selector: id/et_username
+  step_type: input
+  target: 用户名输入框
+  timeout: 10
+  value: '{username}'
+- description: 输入密码
+  extra: {}
+  screenshot_on_fail: true
+  selector: id/et_password
+  step_type: input
+  target: 密码输入框
+  timeout: 10
+  value: '{password}'
+- description: 点击登录按钮提交
+  extra: {}
+  screenshot_on_fail: true
+  selector: id/btn_submit
+  step_type: click
+  target: 登录提交
+  timeout: 10
+  value: ''
+- description: 等待登录完成
+  extra: {}
+  screenshot_on_fail: true
+  selector: ''
+  step_type: wait
+  target: ''
+  timeout: 10
+  value: '2000'
+- description: 验证用户昵称已显示
+  extra: {}
+  screenshot_on_fail: true
+  selector: id/tv_nickname
+  step_type: assert
+  target: 用户昵称
+  timeout: 10
+  value: 已登录
+tags:
+- smoke
+- login
+- auth
+updated_at: '2026-06-13T01:36:54.749668'

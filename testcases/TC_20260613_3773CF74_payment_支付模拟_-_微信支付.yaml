@@ -1,0 +1,92 @@
+author: qa-team
+category: payment
+created_at: '2026-06-13T01:36:54.749668'
+description: 模拟微信支付流程验证
+device_requirements: []
+enabled: true
+expected_result: 支付成功并显示支付完成页面
+extra: {}
+id: TC_20260613_3773CF74
+name: 支付模拟 - 微信支付
+prerequisites:
+- 有待支付订单
+priority: 7
+risk_level: critical
+steps:
+- description: 进入我的页面
+  extra: {}
+  screenshot_on_fail: true
+  selector: ''
+  step_type: click
+  target: 我的Tab
+  timeout: 10
+  value: ''
+- description: 点击我的订单
+  extra: {}
+  screenshot_on_fail: true
+  selector: id/my_orders
+  step_type: click
+  target: 我的订单
+  timeout: 10
+  value: ''
+- description: 点击第一条待支付订单
+  extra: {}
+  screenshot_on_fail: true
+  selector: ''
+  step_type: click
+  target: 待支付订单
+  timeout: 10
+  value: ''
+- description: 点击立即支付
+  extra: {}
+  screenshot_on_fail: true
+  selector: id/btn_pay
+  step_type: click
+  target: 立即支付
+  timeout: 10
+  value: ''
+- description: 选择微信支付方式
+  extra: {}
+  screenshot_on_fail: true
+  selector: id/radio_wechat
+  step_type: click
+  target: 微信支付
+  timeout: 10
+  value: ''
+- description: 点击确认支付
+  extra: {}
+  screenshot_on_fail: true
+  selector: id/btn_confirm_pay
+  step_type: click
+  target: 确认支付
+  timeout: 10
+  value: ''
+- description: 等待支付处理
+  extra: {}
+  screenshot_on_fail: true
+  selector: ''
+  step_type: wait
+  target: ''
+  timeout: 10
+  value: '3000'
+- description: 验证支付成功提示
+  extra: {}
+  screenshot_on_fail: true
+  selector: ''
+  step_type: assert
+  target: 支付成功
+  timeout: 10
+  value: 支付成功
+- description: 截图支付结果
+  extra: {}
+  screenshot_on_fail: true
+  selector: ''
+  step_type: screenshot
+  target: ''
+  timeout: 10
+  value: ''
+tags:
+- smoke
+- payment
+- wechat
+updated_at: '2026-06-13T01:36:54.749668'

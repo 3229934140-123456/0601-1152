@@ -1,0 +1,116 @@
+author: qa-team
+category: order
+created_at: '2026-06-13T01:36:54.749668'
+description: 验证从商品浏览到提交订单的完整流程
+device_requirements: []
+enabled: true
+expected_result: 订单提交成功并跳转至支付页
+extra: {}
+id: TC_20260613_01C980C8
+name: 商品下单流程
+prerequisites:
+- 用户已登录
+priority: 8
+risk_level: critical
+steps:
+- description: 回到首页
+  extra: {}
+  screenshot_on_fail: true
+  selector: ''
+  step_type: home
+  target: ''
+  timeout: 10
+  value: ''
+- description: 点击第一个商品分类
+  extra: {}
+  screenshot_on_fail: true
+  selector: id/category_1
+  step_type: click
+  target: 商品分类
+  timeout: 10
+  value: ''
+- description: 点击列表第一个商品
+  extra: {}
+  screenshot_on_fail: true
+  selector: id/product_item_0
+  step_type: click
+  target: 第一个商品
+  timeout: 10
+  value: ''
+- description: 等待商品详情加载
+  extra: {}
+  screenshot_on_fail: true
+  selector: ''
+  step_type: wait
+  target: ''
+  timeout: 10
+  value: '1000'
+- description: 截图商品详情页
+  extra: {}
+  screenshot_on_fail: true
+  selector: ''
+  step_type: screenshot
+  target: ''
+  timeout: 10
+  value: ''
+- description: 点击加入购物车
+  extra: {}
+  screenshot_on_fail: true
+  selector: id/btn_add_cart
+  step_type: click
+  target: 加入购物车
+  timeout: 10
+  value: ''
+- description: 进入购物车页面
+  extra: {}
+  screenshot_on_fail: true
+  selector: id/tab_cart
+  step_type: click
+  target: 购物车
+  timeout: 10
+  value: ''
+- description: 全选商品
+  extra: {}
+  screenshot_on_fail: true
+  selector: id/checkbox_all
+  step_type: click
+  target: 全选
+  timeout: 10
+  value: ''
+- description: 点击结算按钮
+  extra: {}
+  screenshot_on_fail: true
+  selector: id/btn_checkout
+  step_type: click
+  target: 去结算
+  timeout: 10
+  value: ''
+- description: 验证进入确认订单页
+  extra: {}
+  screenshot_on_fail: true
+  selector: ''
+  step_type: assert
+  target: 确认订单页
+  timeout: 10
+  value: 确认订单
+- description: 点击提交订单
+  extra: {}
+  screenshot_on_fail: true
+  selector: id/btn_submit_order
+  step_type: click
+  target: 提交订单
+  timeout: 10
+  value: ''
+- description: 验证进入支付页面
+  extra: {}
+  screenshot_on_fail: true
+  selector: ''
+  step_type: assert
+  target: 订单提交成功
+  timeout: 10
+  value: 支付页面
+tags:
+- smoke
+- order
+- ecommerce
+updated_at: '2026-06-13T01:36:54.749668'

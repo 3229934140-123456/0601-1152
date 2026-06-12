@@ -1,0 +1,83 @@
+author: qa-team
+category: message
+created_at: '2026-06-13T01:36:54.749668'
+description: 验证消息列表和详情页功能
+device_requirements: []
+enabled: true
+expected_result: 消息列表和详情页正常显示
+extra: {}
+id: TC_20260613_EB521803
+name: 消息中心查看
+prerequisites: []
+priority: 5
+risk_level: medium
+steps:
+- description: 回到首页
+  extra: {}
+  screenshot_on_fail: true
+  selector: ''
+  step_type: home
+  target: ''
+  timeout: 10
+  value: ''
+- description: 点击顶部消息图标
+  extra: {}
+  screenshot_on_fail: true
+  selector: id/iv_message
+  step_type: click
+  target: 消息图标
+  timeout: 10
+  value: ''
+- description: 验证进入消息中心
+  extra: {}
+  screenshot_on_fail: true
+  selector: ''
+  step_type: assert
+  target: 消息中心
+  timeout: 10
+  value: 消息中心
+- description: ''
+  extra: {}
+  screenshot_on_fail: true
+  selector: ''
+  step_type: wait
+  target: ''
+  timeout: 10
+  value: '1000'
+- description: 向下滑动加载更多
+  extra: {}
+  screenshot_on_fail: true
+  selector: ''
+  step_type: swipe
+  target: 消息列表
+  timeout: 10
+  value: ''
+- description: 点击第一条系统消息
+  extra: {}
+  screenshot_on_fail: true
+  selector: ''
+  step_type: click
+  target: 第一条消息
+  timeout: 10
+  value: ''
+- description: 验证消息详情显示
+  extra: {}
+  screenshot_on_fail: true
+  selector: ''
+  step_type: assert
+  target: 消息详情
+  timeout: 10
+  value: 消息详情
+- description: 返回消息列表
+  extra: {}
+  screenshot_on_fail: true
+  selector: ''
+  step_type: back
+  target: ''
+  timeout: 10
+  value: ''
+tags:
+- smoke
+- message
+- notification
+updated_at: '2026-06-13T01:36:54.749668'

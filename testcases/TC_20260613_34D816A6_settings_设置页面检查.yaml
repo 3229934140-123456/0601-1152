@@ -1,0 +1,130 @@
+author: qa-team
+category: settings
+created_at: '2026-06-13T01:36:54.749668'
+description: 验证设置页面各入口正常跳转
+device_requirements: []
+enabled: true
+expected_result: 所有设置子页面正常访问，退出登录成功
+extra: {}
+id: TC_20260613_34D816A6
+name: 设置页面检查
+prerequisites: []
+priority: 4
+risk_level: medium
+steps:
+- description: 进入我的页面
+  extra: {}
+  screenshot_on_fail: true
+  selector: ''
+  step_type: click
+  target: 我的Tab
+  timeout: 10
+  value: ''
+- description: 点击设置齿轮图标
+  extra: {}
+  screenshot_on_fail: true
+  selector: id/iv_settings
+  step_type: click
+  target: 设置图标
+  timeout: 10
+  value: ''
+- description: 验证设置页标题
+  extra: {}
+  screenshot_on_fail: true
+  selector: ''
+  step_type: assert
+  target: 设置页面
+  timeout: 10
+  value: 设置
+- description: 点击账号安全
+  extra: {}
+  screenshot_on_fail: true
+  selector: id/item_account_security
+  step_type: click
+  target: 账号安全
+  timeout: 10
+  value: ''
+- description: 截图账号安全页
+  extra: {}
+  screenshot_on_fail: true
+  selector: ''
+  step_type: screenshot
+  target: ''
+  timeout: 10
+  value: ''
+- description: 返回设置
+  extra: {}
+  screenshot_on_fail: true
+  selector: ''
+  step_type: back
+  target: ''
+  timeout: 10
+  value: ''
+- description: 点击隐私设置
+  extra: {}
+  screenshot_on_fail: true
+  selector: ''
+  step_type: click
+  target: 隐私设置
+  timeout: 10
+  value: ''
+- description: 返回设置
+  extra: {}
+  screenshot_on_fail: true
+  selector: ''
+  step_type: back
+  target: ''
+  timeout: 10
+  value: ''
+- description: 点击关于我们
+  extra: {}
+  screenshot_on_fail: true
+  selector: ''
+  step_type: click
+  target: 关于我们
+  timeout: 10
+  value: ''
+- description: 验证App版本号显示
+  extra: {}
+  screenshot_on_fail: true
+  selector: ''
+  step_type: assert
+  target: 版本号
+  timeout: 10
+  value: 显示正确
+- description: 返回设置
+  extra: {}
+  screenshot_on_fail: true
+  selector: ''
+  step_type: back
+  target: ''
+  timeout: 10
+  value: ''
+- description: 滑动到底部
+  extra: {}
+  screenshot_on_fail: true
+  selector: ''
+  step_type: swipe
+  target: 设置页
+  timeout: 10
+  value: ''
+- description: 点击退出登录按钮
+  extra: {}
+  screenshot_on_fail: true
+  selector: id/btn_logout
+  step_type: click
+  target: 退出登录
+  timeout: 10
+  value: ''
+- description: 在弹窗点击确认退出
+  extra: {}
+  screenshot_on_fail: true
+  selector: ''
+  step_type: click
+  target: 确认退出
+  timeout: 10
+  value: ''
+tags:
+- smoke
+- settings
+updated_at: '2026-06-13T01:36:54.749668'

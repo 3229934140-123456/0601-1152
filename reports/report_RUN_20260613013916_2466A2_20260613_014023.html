@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>自动化测试报告 - 1.0.0</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; background: #f5f7fa; color: #2c3e50; padding: 20px; }
+        .container { max-width: 1400px; margin: 0 auto; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 16px; margin-bottom: 24px; box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3); }
+        .header h1 { font-size: 28px; margin-bottom: 8px; }
+        .header .meta { display: flex; gap: 24px; flex-wrap: wrap; opacity: 0.95; font-size: 14px; }
+        .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .metric-card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .metric-card .label { font-size: 13px; color: #7f8c8d; margin-bottom: 8px; }
+        .metric-card .value { font-size: 32px; font-weight: 700; }
+        .metric-card.passed .value { color: #27ae60; }
+        .metric-card.failed .value { color: #e74c3c; }
+        .metric-card.skipped .value { color: #f39c12; }
+        .metric-card.errors .value { color: #c0392b; }
+        .metric-card.rate .value { color: #2980b9; }
+        .metric-card.time .value { color: #8e44ad; }
+        .card { background: white; border-radius: 12px; padding: 24px; margin-bottom: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .card h2 { font-size: 18px; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 2px solid #ecf0f1; display: flex; align-items: center; gap: 10px; }
+        .card h2::before { content: ''; display: inline-block; width: 4px; height: 20px; background: #667eea; border-radius: 2px; }
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        th, td { padding: 12px 14px; text-align: left; border-bottom: 1px solid #ecf0f1; }
+        th { background: #f8f9fa; font-weight: 600; color: #566573; font-size: 13px; }
+        tr:hover { background: #f8f9fa; }
+        .badge { display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 500; }
+        .badge.passed { background: #d4efdf; color: #186a3b; }
+        .badge.failed { background: #fadbd8; color: #922b21; }
+        .badge.skipped { background: #fdebd0; color: #9c640c; }
+        .badge.error { background: #f5b7b1; color: #7b241c; }
+        .badge.running { background: #d6eaf8; color: #1a5276; }
+        .badge.critical { background: #f1948a; color: #78281f; }
+        .badge.high { background: #f5cba7; color: #7e5109; }
+        .badge.medium { background: #f9e79f; color: #7d6608; }
+        .badge.low { background: #abebc6; color: #1e8449; }
+        .screenshot-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+        .screenshot-item { border: 1px solid #ecf0f1; border-radius: 8px; overflow: hidden; }
+        .screenshot-placeholder { aspect-ratio: 9/16; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 14px; flex-direction: column; gap: 8px; }
+        .screenshot-meta { padding: 10px 12px; font-size: 12px; background: #fafafa; }
+        .screenshot-meta .case { font-weight: 600; margin-bottom: 4px; color: #2c3e50; }
+        .screenshot-meta .error { color: #e74c3c; }
+        .progress-bar { width: 100%; height: 8px; background: #ecf0f1; border-radius: 4px; overflow: hidden; }
+        .progress-bar .fill { height: 100%; background: linear-gradient(90deg, #27ae60, #2ecc71); border-radius: 4px; transition: width 0.3s; }
+        .progress-bar .fill.warn { background: linear-gradient(90deg, #f39c12, #f1c40f); }
+        .progress-bar .fill.danger { background: linear-gradient(90deg, #e74c3c, #c0392b); }
+        .log-item { padding: 12px; background: #2c3e50; border-radius: 8px; color: #ecf0f1; font-family: 'SF Mono', Monaco, Consolas, monospace; font-size: 13px; margin-bottom: 10px; white-space: pre-wrap; word-break: break-all; }
+        .log-item .log-label { color: #f1c40f; font-weight: 600; }
+        .devices-list { display: flex; gap: 12px; flex-wrap: wrap; }
+        .device-chip { padding: 8px 14px; background: #eaf2f8; border-radius: 20px; font-size: 13px; color: #2874a6; font-weight: 500; }
+        .tag-chip { display: inline-block; padding: 2px 8px; background: #e8f8f5; border-radius: 6px; font-size: 11px; color: #117864; margin-right: 4px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📱 移动 App 自动化测试报告</h1>
+            <div class="meta">
+                <span><strong>版本:</strong> 1.0.0</span>
+                <span><strong>运行ID:</strong> RUN_20260613013916_2466A2</span>
+                <span><strong>开始时间:</strong> 2026-06-13T01:39:16.649457</span>
+                <span><strong>结束时间:</strong> 2026-06-13T01:39:24.146724</span>
+                <span><strong>重试次数:</strong> 1</span>
+                <span><strong>仅高风险:</strong> 是</span>
+            </div>
+            
+            <div class="meta" style="margin-top: 12px;">
+                <strong>运行设备:</strong>
+                <div class="devices-list" style="margin-left: 8px;">
+                    
+                    <span class="device-chip">iPhone-15-Pro</span>
+                    
+                    <span class="device-chip">Pixel-8-Pro</span>
+                    
+                </div>
+            </div>
+            
+        </div>
+
+        <div class="metrics-grid">
+            <div class="metric-card rate">
+                <div class="label">通过率</div>
+                <div class="value">50.0%</div>
+                <div class="progress-bar" style="margin-top: 12px;">
+                    <div class="fill warn" style="width: 50.0%;"></div>
+                </div>
+            </div>
+            <div class="metric-card">
+                <div class="label">用例总数</div>
+                <div class="value">2</div>
+            </div>
+            <div class="metric-card passed">
+                <div class="label">通过</div>
+                <div class="value">1</div>
+            </div>
+            <div class="metric-card failed">
+                <div class="label">失败</div>
+                <div class="value">1</div>
+            </div>
+            <div class="metric-card skipped">
+                <div class="label">跳过</div>
+                <div class="value">0</div>
+            </div>
+            <div class="metric-card errors">
+                <div class="label">异常</div>
+                <div class="value">0</div>
+            </div>
+            <div class="metric-card time">
+                <div class="label">总耗时</div>
+                <div class="value">0.12</div>
+                <div style="font-size: 12px; color: #7f8c8d; margin-top: 4px;">分钟</div>
+            </div>
+        </div>
+
+        
+        <div class="card">
+            <h2>❌ 失败用例 & 截图</h2>
+            <div class="screenshot-grid">
+                
+                <div class="screenshot-item">
+                    <div class="screenshot-placeholder">
+                        <div style="font-size: 32px;">📸</div>
+                        <div>失败截图</div>
+                        <div style="font-size: 11px; opacity: 0.8;">D:\trae-bz\TraeProjects\1152\screenshots\TC_20260613_88A92E68_Pixel-8-Pro_013923_fail.png</div>
+                    </div>
+                    <div class="screenshot-meta">
+                        <div class="case">TC_20260613_88A92E68 - 用户登录 - 正确凭证</div>
+                        <div style="margin-bottom: 4px;"><span class="badge critical">critical</span> <span class="badge failed">failed</span></div>
+                        <div>设备: Pixel-8-Pro</div>
+                        
+                        <div class="error">错误: 点击底部我的 Tab - click 失败: 元素未找到或超时</div>
+                        
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+        
+
+        <div class="card">
+            <h2>⏱️ 耗时排行 Top 10</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>排名</th>
+                        <th>用例ID</th>
+                        <th>用例名称</th>
+                        <th>分类</th>
+                        <th>风险等级</th>
+                        <th>设备</th>
+                        <th>状态</th>
+                        <th>耗时 (ms)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                    <tr>
+                        <td><strong>#1</strong></td>
+                        <td><code>TC_20260613_88A92E68</code></td>
+                        <td>用户登录 - 正确凭证</td>
+                        <td>login</td>
+                        <td><span class="badge critical">critical</span></td>
+                        <td>iPhone-15-Pro</td>
+                        <td><span class="badge passed">passed</span></td>
+                        <td><strong>4,198</strong></td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>#2</strong></td>
+                        <td><code>TC_20260613_88A92E68</code></td>
+                        <td>用户登录 - 正确凭证</td>
+                        <td>login</td>
+                        <td><span class="badge critical">critical</span></td>
+                        <td>Pixel-8-Pro</td>
+                        <td><span class="badge failed">failed</span></td>
+                        <td><strong>449</strong></td>
+                    </tr>
+                    
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card">
+            <h2>📋 所有用例执行结果</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>用例ID</th>
+                        <th>用例名称</th>
+                        <th>分类</th>
+                        <th>风险等级</th>
+                        <th>设备</th>
+                        <th>标签</th>
+                        <th>状态</th>
+                        <th>重试</th>
+                        <th>耗时 (ms)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                    <tr>
+                        <td><code>TC_20260613_88A92E68</code></td>
+                        <td>用户登录 - 正确凭证</td>
+                        <td>login</td>
+                        <td><span class="badge critical">critical</span></td>
+                        <td>iPhone-15-Pro</td>
+                        <td>
+                            
+                            <span class="tag-chip">smoke</span>
+                            
+                            <span class="tag-chip">login</span>
+                            
+                            <span class="tag-chip">auth</span>
+                            
+                        </td>
+                        <td><span class="badge passed">passed</span></td>
+                        <td>0</td>
+                        <td>4,198</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><code>TC_20260613_88A92E68</code></td>
+                        <td>用户登录 - 正确凭证</td>
+                        <td>login</td>
+                        <td><span class="badge critical">critical</span></td>
+                        <td>Pixel-8-Pro</td>
+                        <td>
+                            
+                            <span class="tag-chip">smoke</span>
+                            
+                            <span class="tag-chip">login</span>
+                            
+                            <span class="tag-chip">auth</span>
+                            
+                        </td>
+                        <td><span class="badge failed">failed</span></td>
+                        <td>1</td>
+                        <td>449</td>
+                    </tr>
+                    
+                </tbody>
+            </table>
+        </div>
+
+        
+        <div class="card">
+            <h2>📝 关键日志</h2>
+            
+            <div class="log-item">
+<span class="log-label">[用例]</span> TC_20260613_88A92E68 - 用户登录 - 正确凭证 | <span class="log-label">[设备]</span> Pixel-8-Pro
+
+
+<span class="log-label">[失败步骤]</span> 点击底部我的 Tab
+
+
+<span class="log-label">[步骤错误]</span> 点击底部我的 Tab - click 失败: 元素未找到或超时
+
+
+<span class="log-label">[错误]</span> 点击底部我的 Tab - click 失败: 元素未找到或超时
+
+
+<span class="log-label">[日志文件]</span> D:\trae-bz\TraeProjects\1152\logs\run_20260613_013916.log
+            </div>
+            
+        </div>
+        
+    </div>
+</body>
+</html>

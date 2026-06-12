@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>版本差异对比报告</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; background: #f5f7fa; color: #2c3e50; padding: 20px; }
+        .container { max-width: 1400px; margin: 0 auto; }
+        .header { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 30px; border-radius: 16px; margin-bottom: 24px; box-shadow: 0 10px 30px rgba(245, 87, 108, 0.3); }
+        .header h1 { font-size: 28px; margin-bottom: 8px; }
+        .header .meta { display: flex; gap: 24px; flex-wrap: wrap; opacity: 0.95; font-size: 14px; }
+        .version-badge { display: inline-block; padding: 4px 12px; border-radius: 12px; background: rgba(255,255,255,0.2); }
+        .metrics-compare { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .compare-card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .compare-card .label { font-size: 13px; color: #7f8c8d; margin-bottom: 12px; }
+        .compare-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+        .compare-row:last-child { margin-bottom: 0; }
+        .val-a { color: #2980b9; font-weight: 600; font-size: 18px; }
+        .val-b { color: #27ae60; font-weight: 600; font-size: 18px; }
+        .delta { padding: 2px 8px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+        .delta.up { background: #d4efdf; color: #186a3b; }
+        .delta.down { background: #fadbd8; color: #922b21; }
+        .delta.flat { background: #ecf0f1; color: #566573; }
+        .card { background: white; border-radius: 12px; padding: 24px; margin-bottom: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .card h2 { font-size: 18px; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 2px solid #ecf0f1; display: flex; align-items: center; gap: 10px; }
+        .card h2::before { content: ''; display: inline-block; width: 4px; height: 20px; background: #f5576c; border-radius: 2px; }
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        th, td { padding: 12px 14px; text-align: left; border-bottom: 1px solid #ecf0f1; }
+        th { background: #f8f9fa; font-weight: 600; color: #566573; font-size: 13px; }
+        tr:hover { background: #f8f9fa; }
+        .badge { display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 500; }
+        .badge.passed { background: #d4efdf; color: #186a3b; }
+        .badge.failed { background: #fadbd8; color: #922b21; }
+        .badge.skipped { background: #fdebd0; color: #9c640c; }
+        .badge.error { background: #f5b7b1; color: #7b241c; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 16px; }
+        .summary-item { padding: 16px; border-radius: 8px; text-align: center; }
+        .summary-item.new { background: #eaf2f8; color: #2874a6; }
+        .summary-item.removed { background: #fadbd8; color: #922b21; }
+        .summary-item.changed { background: #fef9e7; color: #9c640c; }
+        .summary-item .num { font-size: 28px; font-weight: 700; }
+        .summary-item .txt { font-size: 12px; margin-top: 4px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 版本差异对比报告</h1>
+            <div class="meta">
+                <span><strong>版本A (旧):</strong> <span class="version-badge">{{ diff.version_a }}</span> ({{ diff.run_id_a }})</span>
+                <span><strong>版本B (新):</strong> <span class="version-badge">{{ diff.version_b }}</span> ({{ diff.run_id_b }})</span>
+            </div>
+        </div>
+
+        <div class="metrics-compare">
+            {% for key, data in diff.metrics_diff.items() %}
+            <div class="compare-card">
+                <div class="label">
+                    {% if key == 'total_cases' %}用例总数
+                    {% elif key == 'passed' %}通过数
+                    {% elif key == 'failed' %}失败数
+                    {% elif key == 'skipped' %}跳过数
+                    {% elif key == 'errors' %}异常数
+                    {% elif key == 'pass_rate' %}通过率 (%)
+                    {% elif key == 'duration_ms' %}总耗时 (ms)
+                    {% elif key == 'device_count' %}设备数
+                    {% else %}{{ key }}
+                    {% endif %}
+                </div>
+                <div class="compare-row">
+                    <div>
+                        <div style="font-size: 11px; color: #95a5a6;">版本A</div>
+                        <div class="val-a">{{ data.a }}</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 11px; color: #95a5a6;">版本B</div>
+                        <div class="val-b">{{ data.b }}</div>
+                    </div>
+                </div>
+                {% if data.delta is not none %}
+                <div style="text-align: center; margin-top: 8px;">
+                    {% if key in ['passed', 'pass_rate'] %}
+                        <span class="delta {{ 'up' if data.delta > 0 else ('down' if data.delta < 0 else 'flat') }}">
+                            {{ '+' if data.delta > 0 else '' }}{{ data.delta }}
+                            {% if data.delta > 0 %}↑ 优化{% elif data.delta < 0 %}↓ 退化{% else %}→ 持平{% endif %}
+                        </span>
+                    {% elif key in ['failed', 'errors', 'duration_ms'] %}
+                        <span class="delta {{ 'up' if data.delta < 0 else ('down' if data.delta > 0 else 'flat') }}">
+                            {{ '+' if data.delta > 0 else '' }}{{ data.delta }}
+                            {% if data.delta < 0 %}↓ 优化{% elif data.delta > 0 %}↑ 退化{% else %}→ 持平{% endif %}
+                        </span>
+                    {% else %}
+                        <span class="delta flat">{{ '+' if data.delta > 0 else '' }}{{ data.delta }}</span>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="card">
+            <h2>📈 变更概览</h2>
+            <div class="summary-grid">
+                <div class="summary-item new">
+                    <div class="num">{{ diff.summary.new_cases }}</div>
+                    <div class="txt">新增用例</div>
+                </div>
+                <div class="summary-item removed">
+                    <div class="num">{{ diff.summary.removed_cases }}</div>
+                    <div class="txt">移除用例</div>
+                </div>
+                <div class="summary-item changed">
+                    <div class="num">{{ diff.summary.status_changed }}</div>
+                    <div class="txt">状态变更</div>
+                </div>
+            </div>
+        </div>
+
+        {% if diff.case_status_diff %}
+        <div class="card">
+            <h2>🔄 状态变更用例</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>用例ID</th>
+                        <th>用例名称</th>
+                        <th>设备</th>
+                        <th>版本A 状态</th>
+                        <th>版本B 状态</th>
+                        <th>变化</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in diff.case_status_diff %}
+                    <tr>
+                        <td><code>{{ item.case_id }}</code></td>
+                        <td>{{ item.name }}</td>
+                        <td>{{ item.device }}</td>
+                        <td><span class="badge {{ item.status_a }}">{{ item.status_a }}</span></td>
+                        <td><span class="badge {{ item.status_b }}">{{ item.status_b }}</span></td>
+                        <td>
+                            {% if item.status_a in ['failed', 'error'] and item.status_b == 'passed' %}
+                                <span style="color: #27ae60; font-weight: 600;">✅ 修复</span>
+                            {% elif item.status_a == 'passed' and item.status_b in ['failed', 'error'] %}
+                                <span style="color: #e74c3c; font-weight: 600;">❌ 回归</span>
+                            {% elif item.status_a == 'skipped' and item.status_b != 'skipped' %}
+                                <span style="color: #2980b9; font-weight: 600;">▶️ 开始执行</span>
+                            {% else %}
+                                <span style="color: #f39c12; font-weight: 600;">↔️ 状态变化</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+        {% if diff.performance_diff %}
+        <div class="card">
+            <h2>⚡ 性能变化 (≥1s)</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>用例ID</th>
+                        <th>用例名称</th>
+                        <th>版本A 耗时 (ms)</th>
+                        <th>版本B 耗时 (ms)</th>
+                        <th>差值 (ms)</th>
+                        <th>变化率</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in diff.performance_diff %}
+                    <tr>
+                        <td><code>{{ item.case_id }}</code></td>
+                        <td>{{ item.name }}</td>
+                        <td>{{ "{:,}".format(item.duration_a_ms) }}</td>
+                        <td>{{ "{:,}".format(item.duration_b_ms) }}</td>
+                        <td style="font-weight: 600; color: {{ '#e74c3c' if item.delta_ms > 0 else '#27ae60' }};">
+                            {{ '+' if item.delta_ms > 0 else '' }}{{ "{:,}".format(item.delta_ms) }}
+                        </td>
+                        <td>
+                            <span class="delta {{ 'up' if item.delta_pct < 0 else ('down' if item.delta_pct > 0 else 'flat') }}">
+                                {{ '+' if item.delta_pct > 0 else '' }}{{ item.delta_pct }}%
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>
