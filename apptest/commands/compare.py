@@ -226,6 +226,7 @@ def _print_console_diff(diff: Dict[str, Any]) -> None:
         perf_table = Table(border_style="magenta")
         perf_table.add_column("用例ID", style="bold")
         perf_table.add_column("名称")
+        perf_table.add_column("设备")
         perf_table.add_column("A耗时", justify="right")
         perf_table.add_column("B耗时", justify="right")
         perf_table.add_column("差值", justify="right")
@@ -234,7 +235,7 @@ def _print_console_diff(diff: Dict[str, Any]) -> None:
         for item in diff["performance_diff"][:10]:
             delta_color = "red" if item["delta_ms"] > 0 else "green"
             perf_table.add_row(
-                item["case_id"], item["name"],
+                item["case_id"], item["name"], item.get("device", "-"),
                 f"{item['duration_a_ms']:,}", f"{item['duration_b_ms']:,}",
                 f"[{delta_color}]{'+' if item['delta_ms']>0 else ''}{item['delta_ms']:,}[/{delta_color}]",
                 f"[{'red' if item['delta_pct']>0 else 'green'}]{'+' if item['delta_pct']>0 else ''}{item['delta_pct']}%[/]",
@@ -330,7 +331,7 @@ def _generate_html_diff_fallback(
     for item in diff["performance_diff"]:
         color = "#e74c3c" if item["delta_ms"] > 0 else "#27ae60"
         pct_color = "up" if item["delta_pct"] < 0 else ("down" if item["delta_pct"] > 0 else "flat")
-        perf_rows += f"<tr><td><code>{item['case_id']}</code></td><td>{item['name']}</td><td>{item['duration_a_ms']:,}</td><td>{item['duration_b_ms']:,}</td><td style='font-weight:600;color:{color}'>{'+' if item['delta_ms']>0 else ''}{item['delta_ms']:,}</td><td><span class='delta {pct_color}'>{'+' if item['delta_pct']>0 else ''}{item['delta_pct']}%</span></td></tr>"
+        perf_rows += f"<tr><td><code>{item['case_id']}</code></td><td>{item['name']}</td><td>{item.get('device', '-')}</td><td>{item['duration_a_ms']:,}</td><td>{item['duration_b_ms']:,}</td><td style='font-weight:600;color:{color}'>{'+' if item['delta_ms']>0 else ''}{item['delta_ms']:,}</td><td><span class='delta {pct_color}'>{'+' if item['delta_pct']>0 else ''}{item['delta_pct']}%</span></td></tr>"
 
     s = diff["summary"]
     html = f"""<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8">
@@ -383,7 +384,7 @@ th{{background:#f8f9fa;font-weight:600;color:#566573;}}
 </tr></thead><tbody>{status_rows}</tbody></table></div>"""
     if diff["performance_diff"]:
         html += f"""<div class="card"><h2>⚡ 性能变化 (≥1s)</h2><table><thead><tr>
-<th>用例ID</th><th>名称</th><th>A耗时(ms)</th><th>B耗时(ms)</th><th>差值</th><th>变化率</th>
+<th>用例ID</th><th>名称</th><th>设备</th><th>A耗时(ms)</th><th>B耗时(ms)</th><th>差值</th><th>变化率</th>
 </tr></thead><tbody>{perf_rows}</tbody></table></div>"""
     html += "</div></body></html>"
 

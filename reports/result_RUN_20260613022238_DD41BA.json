@@ -1,0 +1,19 @@
+{
+  "run_id": "RUN_20260613022238_DD41BA",
+  "version": "2.0.0",
+  "start_time": "2026-06-13T02:22:38.488588",
+  "end_time": "2026-06-13T02:22:38.790101",
+  "duration_ms": 301,
+  "total_cases": 0,
+  "passed": 0,
+  "failed": 0,
+  "skipped": 0,
+  "errors": 0,
+  "pass_rate": 0.0,
+  "retry_count": 2,
+  "only_high_risk": false,
+  "device_count": 0,
+  "devices": [],
+  "case_results": [],
+  "summary": {}
+}

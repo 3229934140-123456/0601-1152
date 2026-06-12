@@ -97,10 +97,69 @@ class DeviceManager:
 
     def take_screenshot(self, device_id: str, output_path: Path) -> str:
         device = self.get_device(device_id)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            self._generate_mock_screenshot(output_path, device)
+        except Exception as e:
+            self.logger and hasattr(self, "logger")
+            console.print(f"  [yellow]警告: 生成截图失败 {e}[/yellow]")
         if device:
-            output_path.parent.mkdir(parents=True, exist_ok=True)
             console.print(f"  [dim]截图保存至: {output_path.name}[/dim]")
         return str(output_path)
+
+    @staticmethod
+    def _generate_mock_screenshot(output_path: Path, device: Optional[DeviceConfig]) -> None:
+        width, height = 1080, 1920
+        title = "FAILED"
+        subtitle = "AppTest Screenshot"
+        device_name = device.name if device else "Unknown Device"
+        platform = device.platform if device else "Unknown"
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        import struct
+        import zlib
+
+        def make_chunk(chunk_type: bytes, data: bytes) -> bytes:
+            return (
+                struct.pack(">I", len(data))
+                + chunk_type
+                + data
+                + struct.pack(">I", zlib.crc32(chunk_type + data) & 0xFFFFFFFF)
+            )
+
+        def color(x: int, y: int) -> tuple:
+            t = y / height
+            r = int(60 + 180 * t)
+            g = int(20 + 60 * (1 - t))
+            b = int(80 + 120 * (1 - t))
+            if 80 <= y <= 180:
+                return (255, 80, 80)
+            if 900 <= y <= 1020 and 200 <= x <= 880:
+                return (255, 255, 255)
+            if 1100 <= y <= 1200 and 300 <= x <= 780:
+                return (30, 30, 30)
+            return (min(r, 255), min(g, 255), min(b, 255))
+
+        raw = bytearray()
+        for y in range(height):
+            raw.append(0)
+            for x in range(width):
+                r, g, b = color(x, y)
+                raw.append(r)
+                raw.append(g)
+                raw.append(b)
+
+        png_header = b"\x89PNG\r\n\x1a\n"
+        ihdr = struct.pack(">IIBBBBB", width, height, 8, 2, 0, 0, 0)
+        idat = zlib.compress(bytes(raw), 6)
+
+        with open(output_path, "wb") as f:
+            f.write(png_header)
+            f.write(make_chunk(b"IHDR", ihdr))
+            title_bytes = f"Title: {title}\nDevice: {device_name}\nPlatform: {platform}\nTime: {timestamp}\nSubtitle: {subtitle}".encode("utf-8")
+            f.write(make_chunk(b"tEXt", b"Description\x00" + title_bytes))
+            f.write(make_chunk(b"IDAT", idat))
+            f.write(make_chunk(b"IEND", b""))
 
 
 class TestCaseLoader:
@@ -186,12 +245,50 @@ class TestExecutor:
             "back": self._handle_back,
             "home": self._handle_home,
         }
+        self._init_account_pool()
+
+    def _init_account_pool(self) -> None:
+        config = self.config_manager.load()
+        self.account_pool = list(config.accounts)
+
+    def _resolve_account_placeholders(self, step: TestStep, case: TestCase, device: DeviceConfig) -> Dict[str, str]:
+        placeholders = {}
+        value = step.value or ""
+        target = step.target or ""
+        if "{username}" in value or "{password}" in value or "{username}" in target or "{password}" in target:
+            accounts = self.account_pool
+            if not accounts:
+                self.logger.warn("步骤使用了 {username}/{password} 占位符，但未配置测试账号")
+                return {}
+            account_index = 0
+            if case.category == "login" and len(accounts) > 1:
+                if device.platform == "iOS":
+                    account_index = 0
+                elif device.platform == "Android":
+                    account_index = 1 % len(accounts)
+            account = accounts[account_index % len(accounts)]
+            placeholders["{username}"] = account.username
+            placeholders["{password}"] = account.password
+            placeholders["{role}"] = account.role
+            self.logger.info(
+                f"账号占位符替换 -> 用户名: {account.username} (角色: {account.role})"
+                + f" | 用例: {case.id} | 设备: {device.name}"
+            )
+        return placeholders
+
+    def _apply_placeholders(self, text: str, placeholders: Dict[str, str]) -> str:
+        if not text:
+            return text
+        for k, v in placeholders.items():
+            text = text.replace(k, v)
+        return text
 
     def execute_run(
         self,
         cases: List[TestCase],
         run_id: str,
         version: str,
+        target_devices: Optional[List[DeviceConfig]] = None,
     ) -> TestRunResult:
         start_time = datetime.now()
         run_result = TestRunResult(
@@ -200,7 +297,10 @@ class TestExecutor:
             start_time=start_time.isoformat(),
             retry_count=self.retry_count,
         )
-        devices = self.device_manager.list_devices()
+        if target_devices is None:
+            devices = self.device_manager.list_devices()
+        else:
+            devices = target_devices
         connected_devices = []
         for device in devices:
             if self.device_manager.connect_device(device):
@@ -214,7 +314,17 @@ class TestExecutor:
             run_result.duration_ms = int((end_time - start_time).total_seconds() * 1000)
             return run_result
 
-        total_steps = sum(len(c.steps) for c in cases) * len(connected_devices)
+        def _case_ok_for_device(case: TestCase, device: DeviceConfig) -> bool:
+            if not case.device_requirements:
+                return True
+            return device.name in case.device_requirements
+
+        execution_plan = []
+        for device in connected_devices:
+            for case in cases:
+                if _case_ok_for_device(case, device):
+                    execution_plan.append((device, case))
+
         with Progress(
             SpinnerColumn(),
             TextColumn("[progress.description]{task.description}"),
@@ -222,13 +332,12 @@ class TestExecutor:
             TaskProgressColumn(),
             console=console,
         ) as progress:
-            task = progress.add_task("[cyan]执行测试用例...", total=len(cases) * len(connected_devices))
-            for device in connected_devices:
-                for case in cases:
-                    progress.update(task, description=f"[cyan]{device.name} | {case.name}")
-                    case_result = self._execute_case_with_retry(case, device)
-                    run_result.case_results.append(case_result)
-                    progress.advance(task)
+            task = progress.add_task("[cyan]执行测试用例...", total=len(execution_plan))
+            for device, case in execution_plan:
+                progress.update(task, description=f"[cyan]{device.name} | {case.name}")
+                case_result = self._execute_case_with_retry(case, device)
+                run_result.case_results.append(case_result)
+                progress.advance(task)
 
         end_time = datetime.now()
         run_result.end_time = end_time.isoformat()
@@ -298,33 +407,52 @@ class TestExecutor:
         self, idx: int, step: TestStep, device: DeviceConfig, case: TestCase
     ) -> StepResult:
         start_time = datetime.now()
+        placeholders = self._resolve_account_placeholders(step, case, device)
+        effective_value = self._apply_placeholders(step.value, placeholders)
+        effective_target = self._apply_placeholders(step.target, placeholders)
+        effective_description = step.description or f"步骤 {idx + 1}"
+        if placeholders and effective_value:
+            effective_description = f"{effective_description} (值: {effective_value})"
         step_result = StepResult(
             step_index=idx,
             step_type=step.step_type,
-            description=step.description or f"步骤 {idx + 1}",
+            description=effective_description,
             status=TestStatus.RUNNING.value,
+        )
+        effective_step = TestStep(
+            step_type=step.step_type,
+            target=effective_target,
+            value=effective_value,
+            description=effective_description,
+            selector=step.selector,
+            timeout=step.timeout,
+            screenshot_on_fail=step.screenshot_on_fail,
+            extra=step.extra,
         )
         handler = self._step_handlers.get(step.step_type)
         try:
             if handler:
-                handler(step, device, case)
+                handler(effective_step, device, case)
             else:
                 self.logger.warn(f"未知步骤类型: {step.step_type}")
             status = TestStatus.PASSED.value
         except AssertionError as e:
             status = TestStatus.FAILED.value
             step_result.error_message = str(e)
-            self.logger.error(f"断言失败: {step.description} - {e}")
+            self.logger.error(f"断言失败: {effective_description} - {e}")
         except Exception as e:
             status = TestStatus.ERROR.value
             step_result.error_message = str(e)
-            self.logger.error(f"步骤执行异常: {step.description} - {e}")
+            self.logger.error(f"步骤执行异常: {effective_description} - {e}")
 
         end_time = datetime.now()
         step_result.start_time = start_time.isoformat()
         step_result.end_time = end_time.isoformat()
         step_result.duration_ms = int((end_time - start_time).total_seconds() * 1000)
         step_result.status = status
+        if placeholders:
+            for k, v in placeholders.items():
+                step_result.logs.append(f"[账号占位符] {k} -> {v}")
         return step_result
 
     def _handle_click(self, step: TestStep, device: DeviceConfig, case: TestCase) -> None:
@@ -477,24 +605,28 @@ class ResultComparer:
                 "b": val_b,
                 "delta": (val_b - val_a) if isinstance(val_a, (int, float)) else None,
             }
-        cases_a = {c.case_id: c for c in result_a.case_results}
-        cases_b = {c.case_id: c for c in result_b.case_results}
-        all_case_ids = set(cases_a.keys()) | set(cases_b.keys())
+        def _compound_key(c):
+            return f"{c.case_id}@{c.device_name}"
+
+        cases_a = {_compound_key(c): c for c in result_a.case_results}
+        cases_b = {_compound_key(c): c for c in result_b.case_results}
+        all_keys = set(cases_a.keys()) | set(cases_b.keys())
         new_cases = []
         removed_cases = []
         status_changed = []
-        for cid in all_case_ids:
-            ca = cases_a.get(cid)
-            cb = cases_b.get(cid)
+        for key in all_keys:
+            ca = cases_a.get(key)
+            cb = cases_b.get(key)
+            cid, _, device = key.rpartition("@")
             if ca and not cb:
-                removed_cases.append({"case_id": cid, "name": ca.case_name})
+                removed_cases.append({"case_id": cid, "name": ca.case_name, "device": device})
             elif cb and not ca:
-                new_cases.append({"case_id": cid, "name": cb.case_name})
+                new_cases.append({"case_id": cid, "name": cb.case_name, "device": device})
             elif ca and cb and ca.status != cb.status:
                 status_changed.append({
                     "case_id": cid,
                     "name": ca.case_name,
-                    "device": ca.device_name,
+                    "device": device,
                     "status_a": ca.status,
                     "status_b": cb.status,
                 })
@@ -502,15 +634,17 @@ class ResultComparer:
         diff["summary"]["new_cases"] = len(new_cases)
         diff["summary"]["removed_cases"] = len(removed_cases)
         diff["summary"]["status_changed"] = len(status_changed)
-        for cid in all_case_ids:
-            ca = cases_a.get(cid)
-            cb = cases_b.get(cid)
+        for key in all_keys:
+            ca = cases_a.get(key)
+            cb = cases_b.get(key)
             if ca and cb:
                 delta = cb.duration_ms - ca.duration_ms
                 if abs(delta) >= 1000:
+                    cid, _, device = key.rpartition("@")
                     diff["performance_diff"].append({
                         "case_id": cid,
                         "name": ca.case_name,
+                        "device": device,
                         "duration_a_ms": ca.duration_ms,
                         "duration_b_ms": cb.duration_ms,
                         "delta_ms": delta,

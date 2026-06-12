@@ -166,6 +166,7 @@
                     <tr>
                         <th>用例ID</th>
                         <th>用例名称</th>
+                        <th>设备</th>
                         <th>版本A 耗时 (ms)</th>
                         <th>版本B 耗时 (ms)</th>
                         <th>差值 (ms)</th>
@@ -177,6 +178,7 @@
                     <tr>
                         <td><code>{{ item.case_id }}</code></td>
                         <td>{{ item.name }}</td>
+                        <td>{{ item.device if item.device is defined else '-' }}</td>
                         <td>{{ "{:,}".format(item.duration_a_ms) }}</td>
                         <td>{{ "{:,}".format(item.duration_b_ms) }}</td>
                         <td style="font-weight: 600; color: {{ '#e74c3c' if item.delta_ms > 0 else '#27ae60' }};">

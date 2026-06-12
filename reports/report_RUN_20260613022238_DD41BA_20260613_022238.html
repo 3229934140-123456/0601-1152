@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>自动化测试报告 - {{ run_result.version }}</title>
+    <title>自动化测试报告 - 2.0.0</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; background: #f5f7fa; color: #2c3e50; padding: 20px; }
@@ -60,90 +60,52 @@
         <div class="header">
             <h1>📱 移动 App 自动化测试报告</h1>
             <div class="meta">
-                <span><strong>版本:</strong> {{ run_result.version }}</span>
-                <span><strong>运行ID:</strong> {{ run_result.run_id }}</span>
-                <span><strong>开始时间:</strong> {{ run_result.start_time }}</span>
-                <span><strong>结束时间:</strong> {{ run_result.end_time }}</span>
-                <span><strong>重试次数:</strong> {{ run_result.retry_count }}</span>
-                <span><strong>仅高风险:</strong> {{ '是' if run_result.only_high_risk else '否' }}</span>
+                <span><strong>版本:</strong> 2.0.0</span>
+                <span><strong>运行ID:</strong> RUN_20260613022238_DD41BA</span>
+                <span><strong>开始时间:</strong> 2026-06-13T02:22:38.488588</span>
+                <span><strong>结束时间:</strong> 2026-06-13T02:22:38.790101</span>
+                <span><strong>重试次数:</strong> 2</span>
+                <span><strong>仅高风险:</strong> 否</span>
             </div>
-            {% if run_result.devices %}
-            <div class="meta" style="margin-top: 12px;">
-                <strong>运行设备:</strong>
-                <div class="devices-list" style="margin-left: 8px;">
-                    {% for d in run_result.devices %}
-                    <span class="device-chip">{{ d }}</span>
-                    {% endfor %}
-                </div>
-            </div>
-            {% endif %}
+            
         </div>
 
         <div class="metrics-grid">
             <div class="metric-card rate">
                 <div class="label">通过率</div>
-                <div class="value">{{ run_result.pass_rate }}%</div>
+                <div class="value">0.0%</div>
                 <div class="progress-bar" style="margin-top: 12px;">
-                    <div class="fill {{ 'warn' if run_result.pass_rate < 90 else ('danger' if run_result.pass_rate < 70 else '') }}" style="width: {{ run_result.pass_rate }}%;"></div>
+                    <div class="fill warn" style="width: 0.0%;"></div>
                 </div>
             </div>
             <div class="metric-card">
                 <div class="label">用例总数</div>
-                <div class="value">{{ run_result.total_cases }}</div>
+                <div class="value">0</div>
             </div>
             <div class="metric-card passed">
                 <div class="label">通过</div>
-                <div class="value">{{ run_result.passed }}</div>
+                <div class="value">0</div>
             </div>
             <div class="metric-card failed">
                 <div class="label">失败</div>
-                <div class="value">{{ run_result.failed }}</div>
+                <div class="value">0</div>
             </div>
             <div class="metric-card skipped">
                 <div class="label">跳过</div>
-                <div class="value">{{ run_result.skipped }}</div>
+                <div class="value">0</div>
             </div>
             <div class="metric-card errors">
                 <div class="label">异常</div>
-                <div class="value">{{ run_result.errors }}</div>
+                <div class="value">0</div>
             </div>
             <div class="metric-card time">
                 <div class="label">总耗时</div>
-                <div class="value">{{ (run_result.duration_ms / 1000 / 60)|round(2) }}</div>
+                <div class="value">0.01</div>
                 <div style="font-size: 12px; color: #7f8c8d; margin-top: 4px;">分钟</div>
             </div>
         </div>
 
-        {% if failed_cases %}
-        <div class="card">
-            <h2>❌ 失败用例 & 截图</h2>
-            <div class="screenshot-grid">
-                {% for case in failed_cases %}
-                <div class="screenshot-item">
-                    {% if case.screenshot_exists and case.screenshot_display_src %}
-                    <a href="{{ case.screenshot_display_src }}" target="_blank" style="display:block;">
-                        <img src="{{ case.screenshot_display_src }}" style="width:100%;aspect-ratio:9/16;object-fit:cover;display:block;">
-                    </a>
-                    {% else %}
-                    <div class="screenshot-placeholder">
-                        <div style="font-size: 32px;">�</div>
-                        <div>未捕获</div>
-                        <div style="font-size: 11px; opacity: 0.8;">{{ case.screenshot_name or '无截图文件' }}</div>
-                    </div>
-                    {% endif %}
-                    <div class="screenshot-meta">
-                        <div class="case">{{ case.case_id }} - {{ case.case_name }}</div>
-                        <div style="margin-bottom: 4px;"><span class="badge {{ case.risk_level }}">{{ case.risk_level }}</span> <span class="badge {{ case.status }}">{{ case.status }}</span></div>
-                        <div>设备: {{ case.device_name }}</div>
-                        {% if case.error_message %}
-                        <div class="error">错误: {{ case.error_message[:120] }}</div>
-                        {% endif %}
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-        {% endif %}
+        
 
         <div class="card">
             <h2>⏱️ 耗时排行 Top 10</h2>
@@ -161,18 +123,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for i, case in enumerate(slowest_cases, 1) %}
-                    <tr>
-                        <td><strong>#{{ i }}</strong></td>
-                        <td><code>{{ case.case_id }}</code></td>
-                        <td>{{ case.case_name }}</td>
-                        <td>{{ case.category }}</td>
-                        <td><span class="badge {{ case.risk_level }}">{{ case.risk_level }}</span></td>
-                        <td>{{ case.device_name }}</td>
-                        <td><span class="badge {{ case.status }}">{{ case.status }}</span></td>
-                        <td><strong>{{ "{:,}".format(case.duration_ms) }}</strong></td>
-                    </tr>
-                    {% endfor %}
+                    
                 </tbody>
             </table>
         </div>
@@ -194,49 +145,12 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for case in run_result.case_results %}
-                    <tr>
-                        <td><code>{{ case.case_id }}</code></td>
-                        <td>{{ case.case_name }}</td>
-                        <td>{{ case.category }}</td>
-                        <td><span class="badge {{ case.risk_level }}">{{ case.risk_level }}</span></td>
-                        <td>{{ case.device_name }}</td>
-                        <td>
-                            {% for t in case.tags %}
-                            <span class="tag-chip">{{ t }}</span>
-                            {% endfor %}
-                        </td>
-                        <td><span class="badge {{ case.status }}">{{ case.status }}</span></td>
-                        <td>{{ case.retry_count }}</td>
-                        <td>{{ "{:,}".format(case.duration_ms) }}</td>
-                    </tr>
-                    {% endfor %}
+                    
                 </tbody>
             </table>
         </div>
 
-        {% if key_logs %}
-        <div class="card">
-            <h2>📝 关键日志</h2>
-            {% for log in key_logs %}
-            <div class="log-item">
-<span class="log-label">[用例]</span> {{ log.case_id }} - {{ log.case_name }} | <span class="log-label">[设备]</span> {{ log.device }}
-{% if log.get('failed_step') %}
-
-<span class="log-label">[失败步骤]</span> {{ log.failed_step }}{% endif %}
-{% if log.get('step_error') %}
-
-<span class="log-label">[步骤错误]</span> {{ log.step_error }}{% endif %}
-{% if log.error %}
-
-<span class="log-label">[错误]</span> {{ log.error }}{% endif %}
-{% if log.log_path %}
-
-<span class="log-label">[日志文件]</span> {{ log.log_path }}{% endif %}
-            </div>
-            {% endfor %}
-        </div>
-        {% endif %}
+        
     </div>
 </body>
 </html>

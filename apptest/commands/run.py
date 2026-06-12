@@ -122,20 +122,78 @@ def run_cmd(
             only_high_risk=_only_high_risk,
         )
 
+    active_devices = [d for d in config.devices if d.is_active]
     if device_name:
-        target_devices = [d for d in config.devices if d.name == device_name and d.is_active]
-        if not target_devices:
-            console.print(f"[red]错误: 未找到启用的设备 '{device_name}'[/red]")
+        matched = [d for d in active_devices if d.name == device_name]
+        if not matched:
+            active_names = [d.name for d in active_devices]
+            all_names = [d.name for d in config.devices]
+            if device_name in all_names:
+                console.print(Panel(
+                    f"[red]设备 '{device_name}' 已存在但未启用。[/red]\n"
+                    f"请在 apptest.yaml 中将其 is_active 设为 true，\n"
+                    f"或使用 [bold]apptest record --devices[/bold] 切换启用状态。",
+                    title=f"❌ 设备未启用: {device_name}",
+                    border_style="red",
+                ))
+            else:
+                if active_names:
+                    console.print(Panel(
+                        f"[red]未找到设备: '{device_name}'[/red]\n\n"
+                        f"[dim]当前已启用的设备:[/dim]\n"
+                        + "\n".join(f"  • {d.name} ({d.platform})" for d in active_devices),
+                        title="❌ 设备不存在",
+                        border_style="red",
+                    ))
+                else:
+                    console.print(Panel(
+                        f"[red]未找到设备: '{device_name}'[/red]\n\n"
+                        f"当前没有任何启用的设备。\n"
+                        f"请使用 [bold]apptest record --devices[/bold] 添加并启用设备。",
+                        title="❌ 设备不存在",
+                        border_style="red",
+                    ))
             return
+        target_devices = matched
     else:
-        target_devices = [d for d in config.devices if d.is_active]
+        target_devices = active_devices
 
     if not target_devices:
         console.print("[red]错误: 没有启用的测试设备，请在 apptest.yaml 中配置或使用 --device 指定[/red]")
         return
 
+    from ..config import DeviceConfig
+    def _is_case_available_for_device(case: TestCase, device: DeviceConfig) -> bool:
+        if not case.device_requirements:
+            return True
+        return device.name in case.device_requirements
+
+    final_cases = []
+    skipped_for_device = []
+    for case in filtered_cases:
+        available_devices = [d for d in target_devices if _is_case_available_for_device(case, d)]
+        if not available_devices:
+            skipped_for_device.append(case)
+        else:
+            final_cases.append(case)
+
+    if skipped_for_device:
+        msg_lines = []
+        for case in skipped_for_device[:10]:
+            req = ", ".join(case.device_requirements) if case.device_requirements else "无限制"
+            msg_lines.append(f"  • {case.id} {case.name[:30]} (要求设备: {req})")
+        if len(skipped_for_device) > 10:
+            msg_lines.append(f"  ... 还有 {len(skipped_for_device) - 10} 个")
+        console.print(Panel(
+            "[yellow]以下用例因设备限制被跳过（不在指定设备上运行）:[/yellow]\n"
+            + "\n".join(msg_lines),
+            title="⚠️  设备限制过滤",
+            border_style="yellow",
+        ))
+    filtered_cases = final_cases
+
     if not filtered_cases:
-        console.print("[yellow]提示: 根据过滤条件未匹配到任何用例[/yellow]")
+        console.print("[yellow]提示: 根据过滤条件（含设备限制）未匹配到任何可执行的用例[/yellow]")
         return
 
     total_executions = len(filtered_cases) * len(target_devices)
@@ -189,7 +247,7 @@ def run_cmd(
     )
 
     console.print(f"\n[bold cyan]开始执行测试 Run ID: {run_id}[/bold cyan]\n")
-    result = executor.execute_run(filtered_cases, run_id, _version)
+    result = executor.execute_run(filtered_cases, run_id, _version, target_devices=target_devices)
     result.only_high_risk = _only_high_risk
     logger.info(f"===== 测试执行完成 | 通过率: {result.pass_rate}% =====")
 

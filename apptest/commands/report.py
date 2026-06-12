@@ -197,23 +197,48 @@ def _generate_html_report(
 
     template = env.get_template(template_name)
 
-    failed_cases = collector.get_failed_cases(result)
-    slowest_cases = collector.get_slowest_cases(result, 10)
-    key_logs = collector.extract_key_logs(result)
-
-    html_content = template.render(
-        run_result=result,
-        failed_cases=failed_cases,
-        slowest_cases=slowest_cases,
-        key_logs=key_logs,
-    )
-
     if output_file:
         output_path = Path(output_file)
     else:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         output_path = report_dir / f"report_{result.run_id}_{timestamp}.html"
     output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    failed_cases = collector.get_failed_cases(result)
+    slowest_cases = collector.get_slowest_cases(result, 10)
+    key_logs = collector.extract_key_logs(result)
+
+    def _augment_case(case):
+        d = case if isinstance(case, dict) else case.__dict__.copy()
+        raw_path = d.get("screenshot_path") or ""
+        exists = False
+        display_src = ""
+        if raw_path:
+            p = Path(raw_path)
+            if p.exists():
+                exists = True
+                try:
+                    rel_p = p.resolve().relative_to(output_path.resolve().parent)
+                    display_src = str(rel_p).replace("\\", "/")
+                except Exception:
+                    display_src = p.resolve().as_uri()
+        d["screenshot_exists"] = exists
+        d["screenshot_display_src"] = display_src
+        d["screenshot_name"] = Path(raw_path).name if raw_path else ""
+        d_obj = type("CaseView", (), d)
+        d_obj._d = d
+        return d_obj
+
+    augmented_failed = [_augment_case(c) for c in failed_cases]
+    augmented_slowest = [_augment_case(c) for c in slowest_cases]
+
+    html_content = template.render(
+        run_result=result,
+        failed_cases=augmented_failed,
+        slowest_cases=augmented_slowest,
+        key_logs=key_logs,
+    )
+
     with open(output_path, "w", encoding="utf-8") as f:
         f.write(html_content)
 
@@ -227,6 +252,13 @@ def _generate_html_report_fallback(
     report_dir: Path,
     output_file: Optional[str] = None,
 ) -> Optional[Path]:
+    if output_file:
+        output_path = Path(output_file)
+    else:
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        output_path = report_dir / f"report_{result.run_id}_{timestamp}.html"
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
     failed_cases = collector.get_failed_cases(result)
     slowest_cases = collector.get_slowest_cases(result, 10)
     key_logs = collector.extract_key_logs(result)
@@ -287,8 +319,21 @@ th {{ background:#f8f9fa; }}
         html_parts.append("""<div class="card"><h2>❌ 失败用例 & 截图</h2><div class="ss-grid">""")
         for c in failed_cases:
             ss_name = Path(c.screenshot_path).name if c.screenshot_path else "未捕获"
+            ss_block = ""
+            if c.screenshot_path and Path(c.screenshot_path).exists():
+                try:
+                    try:
+                        rel_p = Path(c.screenshot_path).resolve().relative_to(output_path.resolve().parent)
+                        src = str(rel_p).replace("\\", "/")
+                    except Exception:
+                        src = Path(c.screenshot_path).resolve().as_uri()
+                    ss_block = f'<a href="{src}" target="_blank"><img src="{src}" style="width:100%;aspect-ratio:9/16;object-fit:cover;display:block;"></a>'
+                except Exception:
+                    ss_block = f'<div class="ss-placeholder"><div style="font-size:32px">📸</div><div>失败截图</div><div style="font-size:11px;opacity:0.8">{ss_name}</div></div>'
+            else:
+                ss_block = f'<div class="ss-placeholder"><div style="font-size:32px">📷</div><div>未捕获</div><div style="font-size:11px;opacity:0.8">{ss_name or "无截图文件"}</div></div>'
             html_parts.append(f"""<div class="ss-item">
-<div class="ss-placeholder"><div style="font-size:32px">📸</div><div>失败截图</div><div style="font-size:11px;opacity:0.8">{ss_name}</div></div>
+{ss_block}
 <div class="ss-meta"><div style="font-weight:600">{c.case_id} - {c.case_name}</div>
 <div><span class="badge {c.risk_level}">{c.risk_level}</span> <span class="badge {c.status}">{c.status}</span></div>
 <div>设备: {c.device_name}</div>
@@ -323,12 +368,6 @@ th {{ background:#f8f9fa; }}
 
     html_parts.append("</div></body></html>")
 
-    if output_file:
-        output_path = Path(output_file)
-    else:
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        output_path = report_dir / f"report_{result.run_id}_{timestamp}.html"
-    output_path.parent.mkdir(parents=True, exist_ok=True)
     with open(output_path, "w", encoding="utf-8") as f:
         f.write("\n".join(html_parts))
     return output_path
